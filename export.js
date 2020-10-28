@@ -88,10 +88,10 @@ async function main() {
   });
 
   var options = {
-    // executablePath: "/usr/bin/google-chrome",
+    executablePath: "/usr/bin/google-chrome",
     // MacOS
-    executablePath:
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    // executablePath:
+    // "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     headless: false,
     args: [
       "--enable-usermedia-screen-capturing",
