@@ -15,8 +15,8 @@
     "screencast"
   ],
   "dependencies": {
-    "puppeteer-core": "^5.2.1",
-    "xvfb": "^0.3.0",
-    "yargs": "^16.0.3"
+    "puppeteer-core": "^5.4.1",
+    "xvfb": "^0.4.0",
+    "yargs": "^16.1.0"
   }
 }
