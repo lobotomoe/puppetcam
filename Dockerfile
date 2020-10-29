@@ -5,6 +5,7 @@ WORKDIR /home/node/app
 RUN npm install
 
 COPY ./export.js ./run.sh ./.manifest.json.key /home/node/app/
+COPY ./file_saver /home/node/app/file_saver
 COPY ./chrome-extensions/screen-recording /home/node/app/recorder-extension
 RUN tail -n +2 ./recorder-extension/manifest.json >> .manifest.json.key \
     && mv .manifest.json.key ./recorder-extension/manifest.json
