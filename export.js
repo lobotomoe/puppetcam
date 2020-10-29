@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { resolve, join } = require("path");
 const puppeteer = require("puppeteer-core");
 const Xvfb = require("xvfb");
 
@@ -158,47 +159,21 @@ async function main() {
       record_start = Date.now();
 
       if (!argv.trigger) {
-        page
-          .evaluate(async (time_ms) => {
-            return await new Promise((resolve) => {
-              setTimeout(
-                () =>
-                  window.recorder.stopRecording(function (blob) {
-                    resolve(URL.createObjectURL(blob));
-                  }),
-                time_ms
-              );
-            });
-          }, argv.length + 100)
-          .then(async (blob_url) => {
-            let page_blob = await browser.newPage();
-            await page_blob.goto(blob_url);
-            page_blob
-              .on("console", (message) =>
-                console.log(
-                  `${message
-                    .type()
-                    .substr(0, 3)
-                    .toUpperCase()} ${message.text()}`
-                )
-              )
-              .on("pageerror", ({ message }) => console.log(message))
-              .on("response", (response) =>
-                console.log(`${response.status()} ${response.url()}`)
-              )
-              .on("requestfailed", (request) =>
-                console.log(`${request.failure().errorText} ${request.url()}`)
-              );
-            page.evaluate((url) => {
-              window.postMessage(
-                {
-                  type: "SAVE_FILE",
-                  data: { url: url },
-                },
-                "*"
-              );
-            }, blob_url);
-          });
+        page.evaluate(async (time_ms) => {
+          setTimeout(
+            () =>
+              window.recorder.stopRecording(function (blob_url) {
+                window.postMessage(
+                  {
+                    type: "SAVE_FILE",
+                    data: { url: blob_url },
+                  },
+                  "*"
+                );
+              }),
+            time_ms
+          );
+        }, argv.length + 100);
       }
     }
 
@@ -270,4 +245,27 @@ async function main() {
   xvfb.stopSync();
 }
 
-main();
+main().then(() => {
+  fs.readdir(resolve(`${process.env.HOME}/Downloads`), function (err, list) {
+    let ls = list.map((file) => {
+      stats = fs.statSync(resolve(join(`${process.env.HOME}/Downloads`, file)));
+      return {
+        name: file,
+        created: stats.ctime,
+      };
+    });
+    ls = ls.sort((a, b) => {
+      if (a.created > b.created) return -1;
+      else if (b.created > a.created) return 1;
+      return 0;
+    });
+    const target_filename = ls[0]["name"];
+    fs.renameSync(
+      `${process.env.HOME}/Downloads/${target_filename}`,
+      argv.output,
+      function (err) {
+        if (err) console.log("ERROR: " + err);
+      }
+    );
+  });
+});

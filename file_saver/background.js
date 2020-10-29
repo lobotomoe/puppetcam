@@ -9,11 +9,24 @@ chrome.runtime.onConnect.addListener((port) => {
         filename = msg.filename;
         break;
       case "SAVE_FILE":
+        chrome.downloads.onDeterminingFilename.addListener(function (
+          item,
+          suggest
+        ) {
+          suggest({ filename: filename });
+        });
+
         chrome.downloads.download(
           {
             url: msg.data.url,
+            filename: filename,
           },
-          () => {}
+          (file_id) => {
+            chrome.downloads.search({ id: file_id }, (arr) => {
+              var path = arr[0].filename;
+              var filename = path.replace(/^.*[\\\/]/, "");
+            });
+          }
         );
         break;
       default:
